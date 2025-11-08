@@ -5,6 +5,17 @@
     <link rel="icon" type="image/jpg" href="/dp.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pratik</title>
+
+    <script>
+      (() => {
+        try {
+          const stored = localStorage.getItem('theme');
+          const prefers = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const isDark = stored ? stored === 'dark' : prefers;
+          document.documentElement.classList.toggle('dark', isDark);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

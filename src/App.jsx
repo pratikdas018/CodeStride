@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Sun,
@@ -8,53 +8,55 @@ import {
   ExternalLink,
   Download,
 } from "lucide-react";
+// If you choose EmailJS (no backend), install once: npm i @emailjs/browser
+import emailjs from "@emailjs/browser";
 
-// Single-file React component (default export). Uses TailwindCSS utility classes.
-// Requirements satisfied:
-// - Responsive layout
-// - Dark / Light toggle (persisted in localStorage)
-// - Hero with round profile placeholder
-// - Sections: About, Skills (frontend/backend), Projects, Resume (download), Education, Contact
-// - GitHub + LinkedIn icons that link out
-// - Scroll-based reveal animations (framer-motion)
-// - Micro-interactions & hover states
-// - Clean typography and modern color scheme
+const EMAILJS_SERVICE_ID = "service_df3o81k";
+const EMAILJS_TEMPLATE_ID = "template_3cl97i5";
+const EMAILJS_PUBLIC_KEY = "EIAbfqJCZvoUsPzeX";
+
+
 
 export default function Portfolio() {
-  // Theme toggler
-  const [dark, setDark] = useState(() => {
-    try {
-      return (
-        localStorage.getItem("theme") === "dark" ||
-        (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
-      );
-    } catch (e) {
-      return false;
-    }
-  });
+  // --- Theme toggler (with no-flash on first paint) ---
+  const [dark, setDark] = useState(false);
 
+  // Prevent theme flash BEFORE first paint
+  useLayoutEffect(() => {
+    try {
+      const stored = localStorage.getItem("theme");
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const shouldDark = stored ? stored === "dark" : prefersDark;
+      setDark(shouldDark);
+      document.documentElement.classList.toggle("dark", shouldDark);
+    } catch (_) {
+      // ignore
+    }
+  }, []);
+
+  // Persist changes & update <html> class
   useEffect(() => {
-    if (dark) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
+    try {
+      document.documentElement.classList.toggle("dark", dark);
+      localStorage.setItem("theme", dark ? "dark" : "light");
+    } catch (_) {
+      // ignore
     }
   }, [dark]);
 
-  // Demo data — replace with your real links, project images and resume file
+  // --- Links / assets ---
   const githubUrl = "https://github.com/pratikdas018";
   const linkedinUrl = "https://www.linkedin.com/in/pratik-das-sonu-7201a328b/";
-  const resumeUrl = "/resume.pdf"; // add resume file to public folder
+  const resumeUrl = "/resume.pdf"; // place your PDF in /public
 
+  // --- Projects (ensure images are in /public/projects/*) ---
   const projects = [
     {
       id: 1,
       title: "TalkSy - Real-time Chat App",
       desc: "Full-stack real-time chat app with WebSocket, authentication and multimedia support. Scalable rooms, presence indicators and typing status.",
       tech: ["React", "Node.js", "Socket.io", "MongoDB"],
-      img: "/projects/talksy.jpg",
+      img: "/projects/talksy.jpg", // <— your actual image
       link: "https://realtimetalk-frontend.onrender.com",
     },
     {
@@ -62,7 +64,7 @@ export default function Portfolio() {
       title: "Vingo Real-time Food-delivery-App",
       desc: "A full-stack food delivery platform with real-time tracking, restaurant listings, and a responsive UI. Built with React.js, Node.js, Express, and MongoDB.",
       tech: ["React", "Express", "Node.js", "Socket.io", "JWT", "MongoDB"],
-      img: "/projects/vingo.jpg",
+      img: "/projects/vingo.jpg", // <— your actual image
       link: "https://food-delivery-vingo-frontend.onrender.com",
     },
   ];
@@ -71,6 +73,42 @@ export default function Portfolio() {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   };
+
+  // --- Contact form (EmailJS) ---
+  const formRef = useRef(null);
+  const [sending, setSending] = useState(false);
+  const [sentOk, setSentOk] = useState(null);
+  const [errMsg, setErrMsg] = useState("");
+
+  async function onSubmitContact(e) {
+    e.preventDefault();
+    if (!formRef.current) return;
+    setSending(true);
+    setSentOk(null);
+    setErrMsg("");
+
+    try {
+      // name/email/message inputs must be named exactly like your EmailJS template variables
+      const result = await emailjs.sendForm(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        formRef.current,
+        EMAILJS_PUBLIC_KEY
+      );
+      if (result?.status === 200) {
+        setSentOk(true);
+        formRef.current.reset();
+      } else {
+        setSentOk(false);
+        setErrMsg("Unexpected response from email service.");
+      }
+    } catch (err) {
+      setSentOk(false);
+      setErrMsg(err?.text || err?.message || "Failed to send. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500">
@@ -104,7 +142,7 @@ export default function Portfolio() {
           </a>
 
           <button
-            onClick={() => setDark(!dark)}
+            onClick={() => setDark((d) => !d)}
             className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition"
             aria-label="Toggle theme"
           >
@@ -165,16 +203,13 @@ export default function Portfolio() {
             className="flex justify-center md:justify-end"
           >
             <div className="relative">
-              {/* Round profile placeholder */}
+              {/* Round profile */}
               <div className="w-44 h-44 md:w-56 md:h-56 rounded-full bg-gradient-to-tr from-indigo-500 to-pink-500 p-1 shadow-lg">
                 <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden">
-                  {/* Replace with <img src="/path/to/photo.jpg" alt="Pratik" /> */}
-                  <img src="/profile.jpg" alt="Pratik" />
-                  <span className="text-2xl font-semibold text-slate-700 dark:text-slate-200"></span>
+                  <img src="/profile.jpg" alt="Pratik" className="w-full h-full object-cover" />
                 </div>
               </div>
 
-              {/* Micro-interaction badge */}
               <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white dark:bg-slate-900 px-3 py-1 rounded-full shadow-md border border-slate-100 dark:border-slate-800 text-xs">
                 Full Stack • Problem Solver
               </div>
@@ -300,9 +335,8 @@ export default function Portfolio() {
               >
                 <a href={p.link} target="_blank" rel="noreferrer" className="block">
                   <div className="h-44 md:h-56 bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                   
                     <img
-                      src="/talksy.jpg"
+                      src={p.img} // <- now uses each project's own image
                       alt={p.title}
                       className="w-full h-full object-cover brightness-95 hover:scale-105 transform transition duration-500"
                       loading="lazy"
@@ -394,20 +428,8 @@ export default function Portfolio() {
               <h3 className="font-medium mb-2">Get in touch</h3>
               <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">I’m open to internships, freelance projects and collaboration. Drop a message and I’ll respond promptly.</p>
 
-              {/* Simple contact form that opens mail client as fallback */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const form = e.target;
-                  const name = form.name.value.trim();
-                  const email = form.email.value.trim();
-                  const message = form.message.value.trim();
-                  const subject = encodeURIComponent("Portfolio contact from " + name + " — " + email);
-                  const body = encodeURIComponent(message + "\n\n— " + name + " (" + email + ")");
-                  window.location.href = `mailto:your.email@example.com?subject=${subject}&body=${body}`;
-                }}
-                className="space-y-4"
-              >
+              {/* EmailJS contact form */}
+              <form ref={formRef} onSubmit={onSubmitContact} className="space-y-4">
                 <div>
                   <label className="text-sm">Name</label>
                   <input name="name" required className="w-full mt-1 px-3 py-2 rounded-md border border-slate-200 dark:border-slate-800 bg-transparent outline-none" />
@@ -423,12 +445,23 @@ export default function Portfolio() {
                   <textarea name="message" rows={5} required className="w-full mt-1 px-3 py-2 rounded-md border border-slate-200 dark:border-slate-800 bg-transparent outline-none" />
                 </div>
 
-                <div>
-                  <button type="submit" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white shadow hover:scale-[1.02] transition">
-                    Send Message
+                <div className="flex items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={sending}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white shadow hover:scale-[1.02] transition disabled:opacity-60"
+                  >
+                    {sending ? "Sending…" : "Send Message"}
                   </button>
+                  {sentOk === true && <span className="text-sm text-emerald-600">Sent! Check your inbox.</span>}
+                  {sentOk === false && <span className="text-sm text-rose-600">{errMsg}</span>}
                 </div>
               </form>
+
+              {/* Fallback mailto, if you want to keep it:
+              <div className="mt-4 text-xs text-slate-500">
+                Having trouble? <a className="underline" href={`mailto:pratikdassonu@gmail.com?subject=Portfolio%20contact`}>Email me directly</a>.
+              </div> */}
             </div>
 
             <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 shadow-md flex flex-col gap-4">
@@ -459,6 +492,3 @@ export default function Portfolio() {
     </div>
   );
 }
-
-
-
