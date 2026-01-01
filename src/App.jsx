@@ -12,14 +12,58 @@ import {
 import emailjs from "@emailjs/browser";
 
 const EMAILJS_SERVICE_ID = "service_df3o81k";
-const EMAILJS_TEMPLATE_ID = "template_3cl97i5";
+const EMAILJS_VISITOR_TEMPLATE_ID = "template_visitor_alert";
+const EMAILJS_CONTACT_TEMPLATE_ID = "template_3cl97i5";
 const EMAILJS_PUBLIC_KEY = "EIAbfqJCZvoUsPzeX";
+
 
 
 
 export default function Portfolio() {
   // --- Theme toggler (with no-flash on first paint) ---
   const [dark, setDark] = useState(false);
+
+  const sendVisitorEmail = async () => {
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      const data = await res.json();
+
+      const visitorData = {
+        ip: data.ip || "Unknown",
+        country: data.country_name || "Unknown",
+        city: data.city || "Unknown",
+        device: /Mobi|Android/i.test(navigator.userAgent)
+          ? "Mobile"
+          : "Desktop",
+        browser: navigator.userAgent,
+        os: navigator.platform,
+        screen: `${window.screen.width}x${window.screen.height}`,
+        referrer: document.referrer || "Direct",
+        page: window.location.pathname,
+        time: new Date().toLocaleString(),
+      };
+
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_VISITOR_TEMPLATE_ID,
+        visitorData,
+        EMAILJS_PUBLIC_KEY
+      );
+    } catch (error) {
+      console.error("Visitor email failed:", error);
+    }
+  };
+
+
+  useEffect(() => {
+    const sent = sessionStorage.getItem("visitor_sent");
+
+    if (!sent) {
+      sendVisitorEmail();
+      sessionStorage.setItem("visitor_sent", "true");
+    }
+  }, []);
+
 
   // Prevent theme flash BEFORE first paint
   useLayoutEffect(() => {
@@ -91,10 +135,11 @@ export default function Portfolio() {
       // name/email/message inputs must be named exactly like your EmailJS template variables
       const result = await emailjs.sendForm(
         EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
+        EMAILJS_CONTACT_TEMPLATE_ID,
         formRef.current,
         EMAILJS_PUBLIC_KEY
       );
+
       if (result?.status === 200) {
         setSentOk(true);
         formRef.current.reset();
@@ -457,11 +502,6 @@ export default function Portfolio() {
                   {sentOk === false && <span className="text-sm text-rose-600">{errMsg}</span>}
                 </div>
               </form>
-
-              {/* Fallback mailto, if you want to keep it:
-              <div className="mt-4 text-xs text-slate-500">
-                Having trouble? <a className="underline" href={`mailto:pratikdassonu@gmail.com?subject=Portfolio%20contact`}>Email me directly</a>.
-              </div> */}
             </div>
 
             <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 shadow-md flex flex-col gap-4">
