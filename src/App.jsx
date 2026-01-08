@@ -91,7 +91,7 @@ export default function Portfolio() {
   // --- Links / assets ---
   const githubUrl = "https://github.com/pratikdas018";
   const linkedinUrl = "https://www.linkedin.com/in/pratik-das-sonu-7201a328b/";
-  const resumeUrl = "/resume.pdf"; // place your PDF in /public
+  const resumeUrl = "/pratik's Resume.pdf"; // place your PDF in /public
 
   // --- Projects (ensure images are in /public/projects/*) ---
   const projects = [
