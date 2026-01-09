@@ -21,7 +21,19 @@ const EMAILJS_PUBLIC_KEY = "EIAbfqJCZvoUsPzeX";
 
 export default function Portfolio() {
   // --- Theme toggler (with no-flash on first paint) ---
-  const [dark, setDark] = useState(false);
+  const [showOffer, setShowOffer] = useState(null);
+  const OFFER_LETTER_DRIVE_URL =
+    "https://drive.google.com/drive/folders/1vQ2rTmOmw692DxreyN2wRw-f-LR9QC0S";
+
+  const [dark, setDark] = useState(() => {
+    try {
+      const stored = localStorage.getItem("theme");
+      if (stored) return stored === "dark";
+      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    } catch (_) {
+      return false;
+    }
+  });
 
   const sendVisitorEmail = async () => {
     try {
@@ -64,29 +76,39 @@ export default function Portfolio() {
     }
   }, []);
 
+  // Listen for system theme changes
+  useEffect(() => {
+    if (!window.matchMedia) return;
 
-  // Prevent theme flash BEFORE first paint
-  useLayoutEffect(() => {
-    try {
-      const stored = localStorage.getItem("theme");
-      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const shouldDark = stored ? stored === "dark" : prefersDark;
-      setDark(shouldDark);
-      document.documentElement.classList.toggle("dark", shouldDark);
-    } catch (_) {
-      // ignore
-    }
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (e) => {
+      if (!localStorage.getItem("theme")) {
+        setDark(e.matches);
+      }
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
   // Persist changes & update <html> class
-  useEffect(() => {
+  useLayoutEffect(() => {
     try {
       document.documentElement.classList.toggle("dark", dark);
-      localStorage.setItem("theme", dark ? "dark" : "light");
     } catch (_) {
       // ignore
     }
   }, [dark]);
+
+  const toggleTheme = () => {
+    setDark((prev) => {
+      const newTheme = !prev;
+      try {
+        localStorage.setItem("theme", newTheme ? "dark" : "light");
+      } catch (_) { }
+      return newTheme;
+    });
+  };
 
   // --- Links / assets ---
   const githubUrl = "https://github.com/pratikdas018";
@@ -100,7 +122,7 @@ export default function Portfolio() {
       title: "TalkSy - Real-time Chat App",
       desc: "Full-stack real-time chat app with WebSocket, authentication and multimedia support. Scalable rooms, presence indicators and typing status.",
       tech: ["React", "Node.js", "Socket.io", "MongoDB"],
-      img: "/projects/talksy.jpg", // <— your actual image
+      img: "/projects/talksy.png", // <— your actual image
       link: "https://realtimetalk-frontend.onrender.com",
     },
     {
@@ -108,8 +130,24 @@ export default function Portfolio() {
       title: "Vingo Real-time Food-delivery-App",
       desc: "A full-stack food delivery platform with real-time tracking, restaurant listings, and a responsive UI. Built with React.js, Node.js, Express, and MongoDB.",
       tech: ["React", "Express", "Node.js", "Socket.io", "JWT", "MongoDB"],
-      img: "/projects/vingo.jpg", // <— your actual image
+      img: "/projects/vingo.png", // <— your actual image
       link: "https://food-delivery-vingo-frontend.onrender.com",
+    },
+    {
+      id: 3,
+      title: "TalkNex - AI Voice Assistant",
+      desc: "An AI-based voice assistant similar to Google Assistant that allows users to talk via voice commands, set a custom assistant name and image, and interact naturally.",
+      tech: ["React", "Web Speech API", "JavaScript", "AI Logic"],
+      img: "/projects/talknex.png",
+      link: "https://github.com/pratikdas018/talkNex",
+    },
+    {
+      id: 4,
+      title: "Resume Shortlister (ATS Skill Match Analyzer)",
+      desc: "A resume analysis tool that compares user skills with job descriptions and calculates an exact match percentage, highlighting missing and matched skills.",
+      tech: ["React", "JavaScript", "Text Analysis", "ATS Logic"],
+      img: "/projects/resume-shortlister.png",
+      link: "https://github.com/pratikdas018/resume-shortlister", // replace if repo is different
     },
   ];
 
@@ -187,9 +225,10 @@ export default function Portfolio() {
           </a>
 
           <button
-            onClick={() => setDark((d) => !d)}
+            onClick={toggleTheme}
             className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition"
             aria-label="Toggle theme"
+            aria-pressed={dark}
           >
             {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
@@ -354,6 +393,84 @@ export default function Portfolio() {
             </div>
           </motion.aside>
         </section>
+
+        {/* WORK EXPERIENCE */}
+        <section className="mt-12">
+          <motion.h2
+            className="text-2xl font-semibold mb-6"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            Work Experience
+          </motion.h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Saiket Systems */}
+            <motion.div
+              className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 shadow-md"
+              variants={variants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <h3 className="text-lg font-semibold">Web Development Intern</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Saiket Systems • Internship
+              </p>
+
+              <ul className="mt-3 text-sm text-slate-600 dark:text-slate-300 list-disc list-inside space-y-1">
+                <li>Worked on real-world web development projects using React and modern UI practices</li>
+                <li>Built responsive and user-friendly interfaces following industry standards</li>
+                <li>Collaborated with mentors and followed structured task-based development</li>
+                <li>Improved debugging, code optimization, and deployment skills</li>
+              </ul>
+              <a
+                href={OFFER_LETTER_DRIVE_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border border-indigo-500 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 transition"
+              >
+                View Details
+              </a>
+
+            </motion.div>
+
+            {/* Dynamix Networks */}
+            <motion.div
+              className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 shadow-md"
+              variants={variants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <h3 className="text-lg font-semibold">Web Development Intern</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Dynamix Networks • Internship
+              </p>
+
+              <ul className="mt-3 text-sm text-slate-600 dark:text-slate-300 list-disc list-inside space-y-1">
+                <li>Developed full-stack features using MERN stack</li>
+                <li>Worked on authentication, REST APIs, and database integration</li>
+                <li>Implemented real-time and interactive components</li>
+                <li>Maintained GitHub repositories and shared progress on LinkedIn</li>
+              </ul>
+              <a
+                href={OFFER_LETTER_DRIVE_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border border-indigo-500 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800 transition"
+              >
+                View Details
+              </a>
+
+            </motion.div>
+          </div>
+        </section>
+
 
         {/* PROJECTS */}
         <section id="projects" className="mt-12">
