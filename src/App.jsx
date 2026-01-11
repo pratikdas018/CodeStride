@@ -141,14 +141,26 @@ export default function Portfolio() {
       img: "/projects/talknex.png",
       link: "https://github.com/pratikdas018/talkNex",
     },
+
     {
       id: 4,
+      title: "LMS – Learning Management System",
+      desc: "A full-stack Learning Management System that supports role-based access for students and admins, task assignment, progress tracking, and secure authentication.",
+      tech: ["React", "Node.js", "Express", "MongoDB", "JWT"],
+      img: "/projects/lms.png", // 👉 add this image in public/projects/
+      link: "https://github.com/pratikdas018/LMS",
+    },
+
+    {
+      id: 5,
       title: "Resume Shortlister (ATS Skill Match Analyzer)",
       desc: "A resume analysis tool that compares user skills with job descriptions and calculates an exact match percentage, highlighting missing and matched skills.",
       tech: ["React", "JavaScript", "Text Analysis", "ATS Logic"],
       img: "/projects/resume-shortlister.png",
       link: "https://github.com/pratikdas018/resume-shortlister", // replace if repo is different
     },
+    
+
   ];
 
   const variants = {
