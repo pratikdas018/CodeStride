@@ -147,8 +147,8 @@ export default function Portfolio() {
       title: "LMS – Learning Management System",
       desc: "A full-stack Learning Management System that supports role-based access for students and admins, task assignment, progress tracking, and secure authentication.",
       tech: ["React", "Node.js", "Express", "MongoDB", "JWT"],
-      img: "/projects/lms.png", // 👉 add this image in public/projects/
-      link: "https://github.com/pratikdas018/LMS",
+      img: "/projects/lms.png", 
+      link: "https://codelms-net.vercel.app/",
     },
 
     {
